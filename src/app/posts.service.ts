@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders, HttpParams } from "@angular/common/http";
 import { Post } from "./post.model";
-import { map, catchError } from "rxjs/operators";
+import { map, catchError, tap } from "rxjs/operators";
 import { Subject, throwError } from "rxjs";
 
 @Injectable({ providedIn: "root" })
@@ -18,20 +18,34 @@ export class PostService {
         this.http
             .post<{ name: string }>(
                 "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json",
-                postData
+                postData,
+                {
+                    observe: 'response'
+                }
             )
-            .subscribe((responseData) => {
-                console.log(responseData);
-            },
-                error => {
+            .subscribe(
+                (responseData) => {
+                    console.log(responseData);
+                },
+                (error) => {
                     this.error.next(error.message);
-                });
+                }
+            );
     }
 
     fetchPosts() {
+        let searchParams = new HttpParams();
+        searchParams = searchParams.append('print', 'pretty');
+        searchParams = searchParams.append('custom', 'key'); // ! can append multiple params
+
         return this.http
             .get<{ [key: string]: Post }>(
-                "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json"
+                "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json",
+                {
+                    headers: new HttpHeaders({ 'Custom-Headers': 'hello' }),
+                    params: searchParams
+                }
+
             ) // ! added get response body Type
             .pipe(
                 map((responseData) => {
@@ -45,9 +59,9 @@ export class PostService {
                     console.log(postsArray);
                     return postsArray; // returned to subscribed function
                 }),
-                catchError(errorRes => {
+                catchError((errorRes) => {
                     // send to analytics server
-                    return throwError(errorRes) //! creates new observables
+                    return throwError(errorRes); //! creates new observables
                 })
             );
 
@@ -56,7 +70,14 @@ export class PostService {
 
     deletePosts() {
         return this.http.delete(
-            "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json"
-        );
+            "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json",
+            {
+                observe: 'events',
+                responseType: 'json',
+            })
+            .pipe(
+                tap(event => { //! tap - executes code without altering response
+                    console.log(event);
+                }));
     }
 }
