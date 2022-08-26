@@ -3,18 +3,14 @@ import { HttpClient } from "@angular/common/http";
 import { Post } from "./post.model";
 import { map } from "rxjs/operators";
 
-
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class PostService {
     loadedPosts: Post[] = [];
 
-
     constructor(private http: HttpClient) { }
 
-
     createAndStorePost(title: string, content: string) {
-
-        const postData: Post = { title: title, content: content }
+        const postData: Post = { title: title, content: content };
 
         //..
         this.http
@@ -44,13 +40,14 @@ export class PostService {
                     console.log(postsArray);
                     return postsArray; // returned to subscribed function
                 })
-            )
+            );
 
         // ..
     }
 
     deletePosts() {
-        return this.http.delete("https://test-project-34deb-default-rtdb.firebaseio.com/posts.json")
+        return this.http.delete(
+            "https://test-project-34deb-default-rtdb.firebaseio.com/posts.json"
+        );
     }
-
 }
